@@ -176,15 +176,15 @@ std::string extractLetters(cv::Mat square)
   cv::imshow("2.3",single_channel);
   cv::Mat bw;
   cv::Canny(single_channel, bw, 0, 50, 3);
-  char ch[10];
+  /*char ch[10];
       	ch[0]=count_q++ +'a';
       	ch[1]='.';
       	ch[2]='j';
       	ch[3]='p';
       	ch[4]='g';
       	//cv::imwrite(ch,images_table[i][j]);
-      	cv::imshow(ch,bw);
-  //cv::imshow("2.5",bw);
+      	cv::imshow(ch,bw);*/
+  cv::imshow("2.5",bw);
 
   std::vector<std::vector<cv::Point> > contours;
   cv::findContours(bw, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
@@ -203,32 +203,35 @@ std::string extractLetters(cv::Mat square)
   cv::Rect new_bounds;
   new_bounds.x = 0;
   new_bounds.width = timg.size().width;
-  //new_bounds.y = std::max(bounds.y - bounds.height * 0.1, 0.0);
-  new_bounds.y=0;
+  new_bounds.y = std::max(bounds.y - bounds.height * 0.1, 0.0);
+  //new_bounds.y=0;
 
-  /*new_bounds.height = std::min(bounds.height + bounds.height * 0.2,
-      (double)timg.size().height - new_bounds.y);*/
-  new_bounds.height =timg.size().height;
+  new_bounds.height = std::min(bounds.height + bounds.height * 0.2,
+      (double)timg.size().height - new_bounds.y);
+  //new_bounds.height =timg.size().height;
   cv::Mat letters = timg(new_bounds).clone();
   cv::Mat letters_single_channel(letters.size(), CV_8U);
-  cv::mixChannels(&letters, 1, &letters_single_channel, 1, from_to, 1);
-  cv::threshold(letters_single_channel, letters_single_channel,
-      180, 255, cv::THRESH_BINARY_INV);
+  letters_single_channel=letters.clone();
+  //std::cout<<letters.channels()<<std::endl;
+  //
+  cv::imshow("2.6",letters_single_channel);
+  //std::cout<<letters_single_channel.channels()<<std::endl;
+  //int from_to[] = {0, 0};
+  //cv::mixChannels(&letters, 1, &letters_single_channel, 1, from_to, 1);
+  cv::threshold(letters_single_channel, letters_single_channel,180, 255, cv::THRESH_BINARY_INV);
+  cv::imshow("3",letters_single_channel);
+  std::cout<<letters_single_channel.channels()<<std::endl;
+  cv::cvtColor(letters_single_channel,letters_single_channel,CV_RGB2GRAY);
+  cv::imshow("3.1",letters_single_channel);
   cv::rectangle(letters_single_channel, cv::Point(0,0),
       cv::Point(bounds.x, timg.size().height), cv::Scalar(255,255,255), CV_FILLED);
   cv::rectangle(letters_single_channel, cv::Point(bounds.x+bounds.width,0),
       cv::Point(timg.size().width, timg.size().height), cv::Scalar(255,255,255), CV_FILLED);
 
-  cv::bitwise_not(letters_single_channel,letters_single_channel);
+  //cv::bitwise_not(letters_single_channel,letters_single_channel);
   //char ch[10];
-      	ch[0]=count_q++ +'A';
-      	ch[1]='.';
-      	ch[2]='j';
-      	ch[3]='p';
-      	ch[4]='g';
-      	//cv::imwrite(ch,images_table[i][j]);
-      	cv::imshow(ch,letters_single_channel);
-  cv::imshow("3",letters_single_channel);
+      	
+  
 
   tesseract::TessBaseAPI tess;
   setlocale (LC_NUMERIC, "C");
