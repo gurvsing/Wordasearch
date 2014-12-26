@@ -68,11 +68,11 @@ std::vector<std::vector<cv::Point2f> > findSquares(cv::Mat& image)
     if (approx.size() == 4 && std::fabs(cv::contourArea(contours[i])) > image.size().area() * 0.0001 &&
         cv::isContourConvex(approx))
     {
-    	for(int k=0;k<approx.size();k++)
+    	/*for(int k=0;k<approx.size();k++)
     	{
     		std::cout<<approx[k]<<" ";
     	}
-    	std::cout<<std::endl;
+    	std::cout<<std::endl;*/
       // also, bounding rectangle's dimensions must be square-like
       cv::Rect bounding_rect = cv::boundingRect(cv::Mat(approx));
       if ((float)bounding_rect.height < (float)bounding_rect.width * 1.2 &&
@@ -84,7 +84,7 @@ std::vector<std::vector<cv::Point2f> > findSquares(cv::Mat& image)
       }
     }
   }
-  std::cout<<squares.size()<<std::endl;
+  //std::cout<<squares.size()<<std::endl;
   
   return squares;
 }
@@ -128,6 +128,7 @@ std::vector<std::vector<cv::Mat> > cutSquares(cv::Mat image, std::vector<std::ve
     sortCorners(squares[i], centre);
     centres.push_back(centre);
     sorted.push_back(std::make_pair(std::make_pair(centre.x, centre.y), i));
+    
   }
 
   // sort squares
@@ -167,23 +168,17 @@ std::string extractLetters(cv::Mat square)
         timg.size().width * 0.9, timg.size().height * 0.9));
 
   cv::imshow("2.1",timg);
-
-  int from_to[] = {2, 0};
   cv::Mat single_channel(timg.size(), CV_8U);
-  cv::mixChannels(&timg, 1, &single_channel, 1, from_to, 1);
+  cv::cvtColor(timg,single_channel,CV_RGB2GRAY);
+  /*int from_to[] = {2, 0};
+  
+  cv::mixChannels(&timg, 1, &single_channel, 1, from_to, 1);*/
   cv::imshow("2.2",single_channel);
   //cv::threshold(single_channel, single_channel, 230, 255, cv::THRESH_BINARY_INV);
   cv::imshow("2.3",single_channel);
   cv::Mat bw;
   cv::Canny(single_channel, bw, 0, 50, 3);
-  /*char ch[10];
-      	ch[0]=count_q++ +'a';
-      	ch[1]='.';
-      	ch[2]='j';
-      	ch[3]='p';
-      	ch[4]='g';
-      	//cv::imwrite(ch,images_table[i][j]);
-      	cv::imshow(ch,bw);*/
+  
   cv::imshow("2.5",bw);
 
   std::vector<std::vector<cv::Point> > contours;
@@ -220,7 +215,7 @@ std::string extractLetters(cv::Mat square)
   //cv::mixChannels(&letters, 1, &letters_single_channel, 1, from_to, 1);
   cv::threshold(letters_single_channel, letters_single_channel,180, 255, cv::THRESH_BINARY_INV);
   cv::imshow("3",letters_single_channel);
-  std::cout<<letters_single_channel.channels()<<std::endl;
+  //std::cout<<letters_single_channel.channels()<<std::endl;
   cv::cvtColor(letters_single_channel,letters_single_channel,CV_RGB2GRAY);
   cv::imshow("3.1",letters_single_channel);
   cv::rectangle(letters_single_channel, cv::Point(0,0),
@@ -228,22 +223,29 @@ std::string extractLetters(cv::Mat square)
   cv::rectangle(letters_single_channel, cv::Point(bounds.x+bounds.width,0),
       cv::Point(timg.size().width, timg.size().height), cv::Scalar(255,255,255), CV_FILLED);
 
-  //cv::bitwise_not(letters_single_channel,letters_single_channel);
+  ;cv::bitwise_not(letters_single_channel,letters_single_channel);
   //char ch[10];
       	
-  
+  char ch[10];
+      	ch[0]=count_q++ +'a';
+      	ch[1]='.';
+      	ch[2]='j';
+      	ch[3]='p';
+      	ch[4]='g';
+      	//cv::imwrite(ch,images_table[i][j]);
+      	cv::imshow(ch,letters_single_channel);
 
   tesseract::TessBaseAPI tess;
   setlocale (LC_NUMERIC, "C");
   tess.Init(NULL, "eng");
-  tess.SetVariable("tessedit_char_whitelist", "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-");
+  tess.SetVariable("tessedit_char_whitelist", "ABCDEFGHIiJKLMNOPQRSTUVWXYZ/-");
   tess.SetImage((uchar*)letters_single_channel.data,
       letters_single_channel.cols, letters_single_channel.rows, 1,
       letters_single_channel.cols);
   std::string str;
   char* out = tess.GetUTF8Text();
   //BUG;
-  std::cout<<out<<std::endl;
+  //std::cout<<out<<std::endl;
   for (int i = 0; out[i] != '\0'; ++i)
     if (isalpha(out[i]) || out[i] == '/')
       {
@@ -252,7 +254,7 @@ std::string extractLetters(cv::Mat square)
       }
 
   if (str == "" && bounds.width < bounds.height * 0.3)
-      str = "I";
+      str = "-";
   return str;
 }
 
@@ -264,6 +266,7 @@ int main(int argc, char *argv[])
 	
 	//loading the image in RGB format
 	frame=cv::imread(argv[1],1);
+	cv::resize(frame, frame, cv::Size(350, 550), 0, 0, CV_INTER_CUBIC);
 	std::vector<std::vector<std::string> > table(rows,
       std::vector<std::string>(columns));
 
@@ -290,7 +293,7 @@ int main(int argc, char *argv[])
       	// /cv::imshow(ch,images_table[i][j]);
         table[i][j] = extractLetters(images_table[i][j]);
         std::cout<<table[i][j];
-        //cv::putText(frame, table[i][j], cv::Point(50*(i+1), 50*(j+1)), cv::FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0));
+        cv::putText(frame, table[i][j], cv::Point(50*(i+1), 50*(j+1)), cv::FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0));
         //BUG;
       }
     cv::imshow(window_name, frame);
