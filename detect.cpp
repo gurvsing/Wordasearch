@@ -28,6 +28,11 @@ int count_q=0;
 //  {0, -1},/*{0, 0},*/{0, 1},
 //  {1, -1},  {1, 0},  {1, 1}};
 
+
+bool sortByPosY(const std::pair<std::pair<int, int>, int>  &lhs, const std::pair<std::pair<int, int>, int>  &rhs) { return lhs.first.second <  rhs.first.second; }
+
+bool sortByPosX(const std::pair<std::pair<int, int>, int>  &lhs, const std::pair<std::pair<int, int>, int>  &rhs) { return lhs.first.first <  rhs.first.first; }
+
 std::vector<std::vector<cv::Point2f> > findSquares(cv::Mat& image)
 {
   std::vector<std::vector<cv::Point2f> > squares;
@@ -128,11 +133,46 @@ std::vector<std::vector<cv::Mat> > cutSquares(cv::Mat image, std::vector<std::ve
     sortCorners(squares[i], centre);
     centres.push_back(centre);
     sorted.push_back(std::make_pair(std::make_pair(centre.x, centre.y), i));
+    std::cout<<sorted[i].first.first<<" "<<sorted[i].first.second<<std::endl;
     
   }
 
   // sort squares
-  sort(sorted.begin(), sorted.end());
+  std::stable_sort(sorted.begin(), sorted.end(),sortByPosY);
+
+  for(int i=1;i<sorted.size();i++)
+  {
+  		if(abs(sorted[i].first.second-sorted[i-1].first.second)<=3)
+  		{
+  			sorted[i].first.second=sorted[i-1].first.second;
+  		}	
+  		 //std::cout<<sorted[i].first.first<<" "<<sorted[i].first.second<<" "<<sorted[i].second<<std::endl;
+  		
+  }
+
+
+  std::stable_sort(sorted.begin(), sorted.end(),sortByPosX);
+
+
+  for(int i=1;i<sorted.size();i++)
+  {
+  		if(abs(sorted[i].first.first-sorted[i-1].first.first)<=3)
+  		{
+  			sorted[i].first.first=sorted[i-1].first.first;
+  		}	
+  		 //std::cout<<sorted[i].first.first<<" "<<sorted[i].first.second<<" "<<sorted[i].second<<std::endl;
+  		
+  }
+
+std::stable_sort(sorted.begin(), sorted.end(),sortByPosY);
+std::stable_sort(sorted.begin(), sorted.end(),sortByPosX);
+
+for(int i=0;i<sorted.size();i++)
+  {
+  			
+  		 std::cout<<sorted[i].first.first<<" "<<sorted[i].first.second<<" "<<sorted[i].second<<std::endl;
+  		
+  }
 
   std::vector<std::vector<cv::Mat> > table(rows, std::vector<cv::Mat>(columns));
   for (int i = 0; i < rows; ++i)
