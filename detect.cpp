@@ -4,6 +4,12 @@
 #include "tesseract/baseapi.h"
 
 
+
+#include "trie/trie.h"
+#include "trie/trienode.h"
+#include "graph/graph.h"
+
+
 #include <iostream>
 #include <fstream>
 #include <utility>
@@ -23,10 +29,10 @@ static const int rows = 4;
 
 int count_q=0;
 
-//static const std::vector<std::pair<int, int> > adjacent = 
-//{{-1, -1}, {-1, 0}, {-1, 1},
-//  {0, -1},/*{0, 0},*/{0, 1},
-//  {1, -1},  {1, 0},  {1, 1}};
+static const std::vector<std::pair<int, int> > adjacent = 
+{{-1, -1}, {-1, 0}, {-1, 1},
+  {0, -1},/*{0, 0},*/{0, 1},
+  {1, -1},  {1, 0},  {1, 1}};
 
 
 bool sortByPosY(const std::pair<std::pair<int, int>, int>  &lhs, const std::pair<std::pair<int, int>, int>  &rhs) { return lhs.first.second <  rhs.first.second; }
@@ -133,7 +139,7 @@ std::vector<std::vector<cv::Mat> > cutSquares(cv::Mat image, std::vector<std::ve
     sortCorners(squares[i], centre);
     centres.push_back(centre);
     sorted.push_back(std::make_pair(std::make_pair(centre.x, centre.y), i));
-    std::cout<<sorted[i].first.first<<" "<<sorted[i].first.second<<std::endl;
+    // /std::cout<<sorted[i].first.first<<" "<<sorted[i].first.second<<std::endl;
     
   }
 
@@ -167,12 +173,7 @@ std::vector<std::vector<cv::Mat> > cutSquares(cv::Mat image, std::vector<std::ve
 std::stable_sort(sorted.begin(), sorted.end(),sortByPosY);
 std::stable_sort(sorted.begin(), sorted.end(),sortByPosX);
 
-for(int i=0;i<sorted.size();i++)
-  {
-  			
-  		 std::cout<<sorted[i].first.first<<" "<<sorted[i].first.second<<" "<<sorted[i].second<<std::endl;
-  		
-  }
+
 
   std::vector<std::vector<cv::Mat> > table(rows, std::vector<cv::Mat>(columns));
   for (int i = 0; i < rows; ++i)
@@ -189,7 +190,7 @@ for(int i=0;i<sorted.size();i++)
       result_points.push_back(cv::Point2f(0, result.rows));
 
       cv::Mat transformation_matrix =
-        cv::getPerspectiveTransform(squares[index], result_points);
+      cv::getPerspectiveTransform(squares[index], result_points);
 
       cv::warpPerspective(image, result, transformation_matrix, result.size());
       table[i][j] = result;
@@ -199,7 +200,7 @@ for(int i=0;i<sorted.size();i++)
 
 std::string extractLetters(cv::Mat square)
 {
- cv::imshow("2",square);
+ //cv::imshow("2",square);
   cv::Mat pyr, timg;
   // down-scale and upscale the image to filter out the noise
   cv::pyrDown(square, pyr, cv::Size(square.cols/2, square.rows/2));
@@ -207,19 +208,19 @@ std::string extractLetters(cv::Mat square)
   timg = timg(cv::Rect(timg.size().width * 0.05, timg.size().height * 0.05, 
         timg.size().width * 0.9, timg.size().height * 0.9));
 
-  cv::imshow("2.1",timg);
+  //cv::imshow("2.1",timg);
   cv::Mat single_channel(timg.size(), CV_8U);
   cv::cvtColor(timg,single_channel,CV_RGB2GRAY);
   /*int from_to[] = {2, 0};
   
   cv::mixChannels(&timg, 1, &single_channel, 1, from_to, 1);*/
-  cv::imshow("2.2",single_channel);
+ // cv::imshow("2.2",single_channel);
   //cv::threshold(single_channel, single_channel, 230, 255, cv::THRESH_BINARY_INV);
-  cv::imshow("2.3",single_channel);
+  //cv::imshow("2.3",single_channel);
   cv::Mat bw;
   cv::Canny(single_channel, bw, 0, 50, 3);
   
-  cv::imshow("2.5",bw);
+  //cv::imshow("2.5",bw);
 
   std::vector<std::vector<cv::Point> > contours;
   cv::findContours(bw, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
@@ -249,15 +250,15 @@ std::string extractLetters(cv::Mat square)
   letters_single_channel=letters.clone();
   //std::cout<<letters.channels()<<std::endl;
   //
-  cv::imshow("2.6",letters_single_channel);
+  //cv::imshow("2.6",letters_single_channel);
   //std::cout<<letters_single_channel.channels()<<std::endl;
   //int from_to[] = {0, 0};
   //cv::mixChannels(&letters, 1, &letters_single_channel, 1, from_to, 1);
   cv::threshold(letters_single_channel, letters_single_channel,180, 255, cv::THRESH_BINARY_INV);
-  cv::imshow("3",letters_single_channel);
+  //cv::imshow("3",letters_single_channel);
   //std::cout<<letters_single_channel.channels()<<std::endl;
   cv::cvtColor(letters_single_channel,letters_single_channel,CV_RGB2GRAY);
-  cv::imshow("3.1",letters_single_channel);
+  //cv::imshow("3.1",letters_single_channel);
   cv::rectangle(letters_single_channel, cv::Point(0,0),
       cv::Point(bounds.x, timg.size().height), cv::Scalar(255,255,255), CV_FILLED);
   cv::rectangle(letters_single_channel, cv::Point(bounds.x+bounds.width,0),
@@ -266,14 +267,14 @@ std::string extractLetters(cv::Mat square)
   ;cv::bitwise_not(letters_single_channel,letters_single_channel);
   //char ch[10];
       	
-  char ch[10];
+  /*char ch[10];
       	ch[0]=count_q++ +'a';
       	ch[1]='.';
       	ch[2]='j';
       	ch[3]='p';
       	ch[4]='g';
       	//cv::imwrite(ch,images_table[i][j]);
-      	cv::imshow(ch,letters_single_channel);
+      	cv::imshow(ch,letters_single_channel);*/
 
   tesseract::TessBaseAPI tess;
   setlocale (LC_NUMERIC, "C");
@@ -294,52 +295,103 @@ std::string extractLetters(cv::Mat square)
       }
 
   if (str == "" && bounds.width < bounds.height * 0.3)
-      str = "-";
+      str = "I";
   return str;
 }
 
+
+
+void dfs(Graph& graph, int index, Trie& trie, std::string str, std::vector<bool>& visited, std::set<std::string>& results)
+{
+  if (trie.contains(str) && str.length() >= 3) results.insert(str);
+  for (auto ind : graph.vertices[index].edges)
+  {
+    if (!visited[ind] &&
+        trie.getNode(str + graph.vertices[ind].content) != NULL)
+    {
+      visited[ind] = true;
+      dfs(graph, ind, trie, str + graph.vertices[ind].content, visited, results);
+      visited[ind] = false;
+    }
+  }
+}
+
+void getWords(std::vector<std::vector<std::string> >& table, Trie& trie)
+{
+  Graph graph(table);
+  std::set<std::string> results;
+  for (int i = 0; i < graph.vertices.size(); ++i)
+  {
+    std::string str = graph.vertices[i].content;
+    std::vector<bool> visited(graph.vertices.size(), false);
+    visited[i] = true;
+    dfs(graph, i, trie, str, visited, results);
+  }
+  std::vector<std::string> sorted(results.begin(), results.end());
+  std::sort(sorted.begin(), sorted.end(), [](std::string a, std::string b)
+      { return (a.length() > b.length()); });
+  for (auto str : sorted)
+    std::clog << str << "  ";
+}
 
 
 int main(int argc, char *argv[])
 {
 	cv::Mat frame;
 	
+	Trie trie;
+   std::ifstream wordlist("./wordlist/wordlist.txt");
+   std::string line;
+   while (std::getline(wordlist, line)) trie.add(line);
+
+   // Launching camera
+  cv::VideoCapture cap(0);
+  if (!cap.isOpened())
+  {
+    std::clog << "Could not open webcam" << std::endl;
+    return -1;
+  }
+
 	//loading the image in RGB format
-	frame=cv::imread(argv[1],1);
-	cv::resize(frame, frame, cv::Size(350, 550), 0, 0, CV_INTER_CUBIC);
+	frame=cv::imread("Hello.png",1);
+	//v::resize(frame, frame, cv::Size(350, 550), 0, 0, CV_INTER_CUBIC);
 	std::vector<std::vector<std::string> > table(rows,
       std::vector<std::string>(columns));
 
+	while(true)
+  	{
+    if (cv::waitKey(30) >= 0)
+    {
+      cv::imwrite("Hello.png", frame);
+      break;
+    }
+    cap >> frame;
+
 	std::vector<std::vector<cv::Point2f> > squares = findSquares(frame);
-	BUG;
+	//BUG;
     std::vector<std::vector<cv::Mat> > images_table = cutSquares(frame, squares);
 
     if (images_table.empty())
     {
       cv::imshow(window_name, frame);
-      //continue;
+      continue;
     }
 
     for (int i = 0; i < images_table.size(); ++i)
       {for (int j = 0; j < images_table[i].size(); ++j)
       {
-      	char ch[10];
-      	ch[0]=i*4+j+'a';
-      	ch[1]='.';
-      	ch[2]='j';
-      	ch[3]='p';
-      	ch[4]='g';
-      	cv::imwrite(ch,images_table[i][j]);
+      	
       	// /cv::imshow(ch,images_table[i][j]);
         table[i][j] = extractLetters(images_table[i][j]);
-        std::cout<<table[i][j];
-        cv::putText(frame, table[i][j], cv::Point(50*(i+1), 50*(j+1)), cv::FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0));
+        //std::cout<<table[i][j];
+        cv::putText(frame, table[i][j], cv::Point(50*(i+1), 50*(j+1)), cv::FONT_HERSHEY_SIMPLEX, 1, CV_RGB(0, 0, 0));
         //BUG;
       }
     cv::imshow(window_name, frame);
   }
+}
   // Processing the table
-  //getWords(table, trie);
+  getWords(table, trie);
   cv::waitKey(0);
 	return 0;
 
