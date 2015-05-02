@@ -3,8 +3,6 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "tesseract/baseapi.h"
 
-
-
 #include "trie/trie.h"
 #include "trie/trienode.h"
 #include "graph/graph.h"
@@ -383,12 +381,13 @@ int main(int argc, char *argv[])
       	
       	// /cv::imshow(ch,images_table[i][j]);
         table[i][j] = extractLetters(images_table[i][j]);
-        //std::cout<<table[i][j];
+        std::cout<<table[i][j];
         cv::putText(frame, table[i][j], cv::Point(50*(i+1), 50*(j+1)), cv::FONT_HERSHEY_SIMPLEX, 1, CV_RGB(0, 0, 0));
         //BUG;
       }
     cv::imshow(window_name, frame);
   }
+  std::cout<<std::endl;
 }
   // Processing the table
   getWords(table, trie);
